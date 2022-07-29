@@ -1,0 +1,15 @@
+name: ef1
+services:
+  flask:
+    ports:
+      - 8080:8080
+    build:
+      context: .
+    volumes:
+      - .:/app
+    init: true
+    depends_on:
+      - redis
+  redis:
+    image: redis
+

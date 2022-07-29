@@ -24,12 +24,18 @@ def hello_world():
         Look at <code>app.py</code> to see how it works.
         <hr>
         <img style="width: 400px; height: 400px;" src="/static/svg.svg">
-
+        
     ''')
     
     return UI.Render()
 
-
+@app.route("/hi")
+def hi():
+    UI = Layout()
+    UI('''
+        hi
+    ''')
+    return UI.Render()
 
 class Layout():
     def __init__(self):
@@ -49,12 +55,17 @@ class Layout():
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="/static/app.css" rel="stylesheet"  crossorigin="anonymous">
 
     <title>Hello, world!</title>
   </head>
   <body>
     ''' + ('''
     <div class="container">
+        <nav>
+            <a href="/">home</a>
+            <a href="/hi">hi</a>
+        </nav>
         ''' + ''.join(self.Body) + '''
     </div>
     ''' if self.Container else '''

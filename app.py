@@ -1,29 +1,113 @@
 # vim:fileencoding=utf-8:ts=4:sw=4:sts=4:expandtab
 
-from flask import Flask, escape, Markup
+from flask import Flask, redirect, request
 
 import Granite
-from Granite import QA, HS
-
+from Granite import QA, HS, JN, ML
+import random
 Redis = Granite.OpenRedis(Host='redis', Database=0)
 
 app = Flask(__name__)
 
-@app.route("/")
-def hello_world():
 
+@app.route("/deletenames", methods=['POST', 'GET'])
+def delete():
+
+    name = request.args['name']
     
-    num = Redis.get_int('count') or 0
 
-    Redis.set_int('count', num+1)
+    UI = Layout()
+    UI('''
+        <h2>Delete Forms</h2>
+        <form method="post" action=''' + QA(request.url) + '''>
+		    <button type="submit">Delete ''' + HS(name) + '''</button>
+   		    or <a href="/">Cancel</a>
+        </form> 
+
+        <hr>
+
+        
+    ''')
+    
+    
+    return UI.Render()
+
+@app.route("/")
+def index():
+
+    names = Redis.lrange_str('dinner_name_list', 0, -1)
+
+    UI = Layout()
+    UI('''
+        <h2>People List</h2>
+        <a class="btn btn-primary" href="/add">Add Person</a>
+        <a class="btn btn-primary" href="/dinner">Who's Paying?</a>
+        <a class="btn btn-primary" href=''' + QA(ML('/deletenames', name=names)) + '''>Delete</a>
+        <hr>
+        ''' + JN('''
+            <div style="color: blue;">''' + HS(name) + '''</div>
+        ''' for name in names) + '''
+
+        
+    ''')
+    return UI.Render()
+
+
+@app.route("/dinner")
+def dinner():
+
+    names = Redis.lrange_str('dinner_name_list', 0, -1)
+    namelength = len(names)
+    namelengthrandom = random.randint(0, namelength -1)
+
+    UI = Layout()
+    UI('''
+        <h2>Who's paying?</h2>
+        ''' + HS(names[namelengthrandom]) +''' is paying for the dinner.  <a href="/">Cancel</a> 
+    ''')
+    
+    
+    return UI.Render()
+
+
+@app.route("/add", methods=['POST', 'GET'])
+def add():
+
+    errors = []
+    name = ""
+
+    for _ in (range(1) if request.method == 'POST' else range(0)):
+        name = request.form['name'].strip()
+        
+        if not name:
+            errors.append('Name is required.')
+        if len(name) > 10:
+            errors.append('Name must not be longer than 10 characters.')
+        
+        if errors:
+            break
+
+        # process redis here
+        Redis.lpush_str('dinner_name_list', name)
+
+        return redirect('/')
+
     
     UI = Layout()
     UI('''
-        <h1>Hello visitor #''' + HS(num) + ''', this is an example flask app</h1>
+        <h2>HTML Forms</h2>
+        ''' + JN('''
+            <div style="color: red;">''' + HS(e) + '''</div>
+        ''' for e in errors) + '''
+        <form method="post" action=''' + QA(request.url) + '''>
+            <label for="name">Add Name:</label><br>
+            <input type="text" id="name" name="name" value=''' + QA(name) + '''><br>
+            <button type="submit">Save</button>
+            or <a href="/">Cancel</a>
+        </form> 
+
         <hr>
-        Look at <code>app.py</code> to see how it works.
-        <hr>
-        <img style="width: 400px; height: 400px;" src="/static/svg.svg">
+
         
     ''')
     

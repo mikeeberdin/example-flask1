@@ -10,27 +10,29 @@ Redis = Granite.OpenRedis(Host='redis', Database=0)
 app = Flask(__name__)
 
 
-@app.route("/deletenames", methods=['POST', 'GET'])
+@app.route("/deletename/", methods=['POST', 'GET'])
 def delete():
 
     name = request.args['name']
-    
-
+    errors = []
+     
     UI = Layout()
     UI('''
         <h2>Delete Forms</h2>
+        ''' + JN('''
+            <div style="color: red;">''' + HS(e) + '''</div>
+        ''' for e in errors) + '''
         <form method="post" action=''' + QA(request.url) + '''>
-		    <button type="submit">Delete ''' + HS(name) + '''</button>
-   		    or <a href="/">Cancel</a>
-        </form> 
-
+            <button type="submit">Delete ''' + HS(name) + '''</button>
+            or <a href="/">Cancel</a>
+        </form>
         <hr>
 
         
     ''')
     
-    
-    return UI.Render()
+    return UI.Render() 
+
 
 @app.route("/")
 def index():
@@ -42,11 +44,21 @@ def index():
         <h2>People List</h2>
         <a class="btn btn-primary" href="/add">Add Person</a>
         <a class="btn btn-primary" href="/dinner">Who's Paying?</a>
-        <a class="btn btn-primary" href=''' + QA(ML('/deletenames', name=names)) + '''>Delete</a>
-        <hr>
+        <table>
+                    <tr>
+                        <th>Names</th>
+                        <th>Action</th>
+                    </tr>
+                    
         ''' + JN('''
-            <div style="color: blue;">''' + HS(name) + '''</div>
+                      <tr>
+                        <td><div style="color: blue;">''' + HS(name) + '''</div></td>
+                        <td><a href=''' + QA(ML('/deletename', name=name)) + '''>Delete</a>
+        <hr></a></td>
         ''' for name in names) + '''
+                    </tr>
+                    </table>
+
 
         
     ''')
@@ -100,7 +112,6 @@ def add():
             <div style="color: red;">''' + HS(e) + '''</div>
         ''' for e in errors) + '''
         <form method="post" action=''' + QA(request.url) + '''>
-            <label for="name">Add Name:</label><br>
             <input type="text" id="name" name="name" value=''' + QA(name) + '''><br>
             <button type="submit">Save</button>
             or <a href="/">Cancel</a>
